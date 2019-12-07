@@ -49,7 +49,7 @@ for h_id,h in hotspot.items():
     print(f"{dist:4.1f} {int(h['score']*100):5} {h['name']}")
 
 # now pull peeps who have witnessed us: https://tedder.me/lols/witness-me-2.gif
-witret = requests.get(f'https://alamo.helium.foundation/api/witnesses/{home["address"]}')
+witret = requests.get(f'https://explorer.helium.foundation/api/witnesses/{home["address"]}')
 data = witret.json().get('data')
 if len(data):
   print(f"\nhotspot name         count  recent time")
