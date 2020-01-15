@@ -49,7 +49,7 @@ if len(data):
 
     if reward_type is not None and reward_type.startswith('poc'):
       block_id = a['reward_block_height']
-      reward_amount = a['reward_amount']/1000**3
+      reward_amount = a['reward_amount']/100000000
       reward_time = datetime.datetime.fromtimestamp(a['reward_block_time']).isoformat()
 
       if reward_type == 'poc_challengers':
