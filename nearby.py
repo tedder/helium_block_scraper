@@ -50,13 +50,16 @@ for h_id,h in hotspot.items():
     print(f"{dist:4.1f} {int(h['score']*100):5} {h['name']}")
 
 # now pull peeps who have witnessed us: https://tedder.me/lols/witness-me-2.gif
-witret = requests.get(f'https://alamo.helium.foundation/api/witnesses/{home["address"]}')
+witret = requests.get(f'https://explorer.helium.foundation/api/witnesses/{home["address"]}')
 data = witret.json().get('data')
 if len(data):
-  print(f"\nhotspot name         count  recent time")
+  print(f"\nhotspot name                   count  rssi recent time")
   for h in data:
     # h = dict of pocs that saw us
-    print(f"{h['name']:20} {sum(h['hist'].values()):5}  {datetime.datetime.fromtimestamp(h['recent_time']/1000**3).isoformat()}")
+    hist = h['hist']
+    rssi = max(hist, key=hist.get)
+    count = sum(hist.values())
+    print(f"{h['name']:25} {count:10} {rssi:5} {datetime.datetime.fromtimestamp(h['recent_time']/1000**3).isoformat()}")
 
 
 
