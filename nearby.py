@@ -41,13 +41,26 @@ if not home:
   print(f"eep, we didn't find your hotspot name ({homeid}).")
   sys.exit(-1)
 
+results = []
 
 # now compare them to see if they're local
 print(f"dist score name")
 for h_id,h in hotspot.items():
   dist = geo( loc(home), loc(h) ).miles
   if dist < 30:
-    print(f"{dist:4.1f} {int(h['score']*100):5} {h['name']}")
+    score = int(h['score']*100)
+    coord = f"{h['lat']}, {h['lng']}"
+    name = h['name']
+    result = (dist, score, name, coord)
+    results.append(result)
+
+def sortDist(val): 
+    return val[0] 
+
+results.sort(key=sortDist)
+
+for result in results:
+  print(f"{result[0]:4.1f} {result[1]:5} {result[2]:30} {result[3]}")
 
 # now pull peeps who have witnessed us: https://tedder.me/lols/witness-me-2.gif
 witret = requests.get(f'https://explorer.helium.foundation/api/witnesses/{home["address"]}')
