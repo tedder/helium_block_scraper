@@ -40,7 +40,7 @@ if not home:
   print(f"eep, we didn't find your hotspot name ({homeid}).")
   sys.exit(-1)
 
-results = []
+hotspots = []
 
 # now compare them to see if they're local
 print(f"dist score name")
@@ -48,29 +48,24 @@ for h_id,h in hotspot.items():
   dist = geo( loc(home), loc(h) ).miles
   if dist < 30:
     score = int(h['score']*100)
-    coord = f"{h['lat']}, {h['lng']}"
+    coord = f"{h['lat']:3.4f}, {h['lng']:3.4f}"
     name = h['name']
     result = (dist, score, name, coord)
-    results.append(result)
+    hotspots.append(result)
 
-def sortDist(val): 
-    return val[0] 
-
-results.sort(key=sortDist)
-
-for result in results:
+for result in reversed(sorted(hotspots, key=lambda x: x[0])):
   print(f"{result[0]:4.1f} {result[1]:5} {result[2]:30} {result[3]}")
 
 # now pull peeps who have witnessed us: https://tedder.me/lols/witness-me-2.gif
 witret = requests.get(f'https://explorer.helium.foundation/api/witnesses/{home["address"]}')
 data = witret.json().get('data')
 if len(data):
-  print(f"\nhotspot name                   count  rssi recent time")
+  print(f"\nhotspot name                   count    rssi  witness time")
   for h in sorted(data, key=lambda x: x.get('recent_time')):
     # h = dict of pocs that saw us
     hist = h['hist']
     rssi = max(hist, key=hist.get)
     count = sum(hist.values())
-    print(f"{h['name']:25} {count:10} {rssi:5} {datetime.datetime.fromtimestamp(h['recent_time']/1000**3).isoformat()}")
+    print(f"{h['name']:25} {count:10}   {rssi:5}  {datetime.datetime.fromtimestamp(h['recent_time']/1000**3).isoformat(timespec='minutes')}")
 
 
