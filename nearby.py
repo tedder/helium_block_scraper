@@ -6,7 +6,6 @@
 # aka PEP 498's literal string interpolation. you'll also need geopy and requests:
 # pip3 install geopy requests
 
-
 from geopy.distance import geodesic as geo
 import re
 import sys
@@ -67,13 +66,11 @@ witret = requests.get(f'https://explorer.helium.foundation/api/witnesses/{home["
 data = witret.json().get('data')
 if len(data):
   print(f"\nhotspot name                   count  rssi recent time")
-  for h in data:
+  for h in sorted(data, key=lambda x: x.get('recent_time')):
     # h = dict of pocs that saw us
     hist = h['hist']
     rssi = max(hist, key=hist.get)
     count = sum(hist.values())
     print(f"{h['name']:25} {count:10} {rssi:5} {datetime.datetime.fromtimestamp(h['recent_time']/1000**3).isoformat()}")
-
-
 
 
