@@ -7,6 +7,7 @@
 # pip3 install requests
 
 
+from datetime import timezone as timezone
 from geopy.distance import geodesic as geo
 import re
 import sys
@@ -45,19 +46,19 @@ def get_activity(home, hotspot_map):
   if not len(data):
     print("no activity in the API for you.")
     return
-  
+
   for a in reversed(data):
     reward_type = a['reward_type']
     witness_id = a['poc_witness_challenge_id']
     challenge_req_hash = a['poc_req_txn_hash']
     challenge_hash = a['poc_rx_txn_hash']
     id_spacing = ''
-  
+
     if reward_type is not None and reward_type.startswith('poc'):
       block_id = a['reward_block_height']
       reward_amount = a['reward_amount']/100000000
-      reward_time = datetime.datetime.fromtimestamp(a['reward_block_time']).isoformat(timespec='seconds')
-  
+      reward_time = format_time(a['reward_block_time'])
+
       if reward_type == 'poc_challengers':
         print(f"{reward_time}: Block {block_id} - {id_spacing:9} Mined {reward_amount} - Challenger")
       elif reward_type == 'poc_challengees':
@@ -65,21 +66,29 @@ def get_activity(home, hotspot_map):
       elif reward_type == 'poc_witnesses':
         print(f"{reward_time}: Block {block_id} - {id_spacing:9} Mined {reward_amount} - Witness")
     elif witness_id is not None:
-      witness_time = datetime.datetime.fromtimestamp(a['poc_rx_txn_block_time']).isoformat(timespec='seconds')
+      witness_time = format_time(a['poc_rx_txn_block_time'])
       block_id = a['poc_rx_txn_block_height']
       print(f"{witness_time}: Block {block_id} - {witness_id:7} - Challenge Witnessed")
     elif challenge_req_hash is not None:
-      challenge_time = datetime.datetime.fromtimestamp(a['poc_req_txn_block_time']).isoformat(timespec='seconds')
+      challenge_time = format_time(a['poc_req_txn_block_time'])
       block_id = a['poc_req_txn_block_height']
       print(f"{challenge_time}: Block {block_id} - {id_spacing:9} Challenge Constructed")
     elif challenge_hash is not None:
-      challenge_time = datetime.datetime.fromtimestamp(a['poc_rx_txn_block_time']).isoformat(timespec='seconds')
+      challenge_time = format_time(a['poc_rx_txn_block_time'])
       block_id = a['poc_rx_txn_block_height']
       challenge_id = a['poc_rx_challenge_id']
       print(f"{challenge_time}: Block {block_id} - {challenge_id:7} - Challenge Success")
       get_challenge(home, challenge_id, hotspot_map)
     else:
       print("Unknown")
+
+# Given a unix timestamp format it into an RFC3339 string in the  local time zone
+def format_time(timestamp):
+  return (
+    datetime.datetime.fromtimestamp(timestamp, tz=timezone.utc)
+    .astimezone()
+    .isoformat(timespec='seconds')
+  )
 
 def loc(d, prefix=''):
   return (d[f'{prefix}lat'], d[f'{prefix}lng'])

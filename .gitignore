@@ -1,2 +1,3 @@
 blocks/
 *.pyc
+.python-version
