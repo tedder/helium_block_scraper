@@ -23,7 +23,7 @@ def get_challenge(home, challenge_id, hotspot_address_map):
   hotspot_address = home['address']
   challenge_activity = requests.get(f'https://explorer.helium.foundation/api/challenges/{challenge_id}')
   path = challenge_activity.json()['data']['pathElements']
-  print("  result     witnesses  distance target                    receipt?")
+  print("  result     witnesses  distance path     target                    receipt?")
   for i,elem in enumerate(path):
     if home['address'] == elem['address']:
       # even if these two are the same the lat/lon may not be equal. yay for floats and rounding.
@@ -37,7 +37,7 @@ def get_challenge(home, challenge_id, hotspot_address_map):
     if rct_tgt == tgt:
       receipt_label = "received"
 
-    print(f"  {elem['result']:10} {len(elem['witnesses']):5}      {dist_txt}  {tgt:25} {receipt_label}")
+    print(f"  {elem['result']:10} {len(elem['witnesses']):5}      {dist_txt}  {elem['receipt'].get('origin', ''):8} {tgt:25} {receipt_label}")
 
 def get_activity(home, hotspot_map):
   hotspot_address = home['address']
