@@ -3,13 +3,16 @@
 # copyright 2019, MIT License.
 
 # this script needs python3.6 or newer because of the "f-string" syntax,
-# aka PEP 498's literal string interpolation. you'll also requests:
-# pip3 install geopy requests
+# aka PEP 498's literal string interpolation. You'll also need to install
+# several required modules: pip3 install -r requirements.txt
+import argparse
 import re
 import sys
 from datetime import datetime, timezone
+from time import mktime
 
 import requests
+from dateutil import parser
 from geopy.distance import geodesic as geo
 
 
@@ -40,8 +43,10 @@ def get_challenge(home, challenge_id, hotspot_address_map):
     print(f"  {elem['result']:10} {len(elem['witnesses']):5}      {dist_txt}  {elem['receipt'].get('origin', ''):8} {tgt:25} {receipt_label}")
 
 
-def get_activity(home, hotspot_map):
+def get_activity(home, hotspot_map, since):
   hotspot_address = home['address']
+  since_unix_time = mktime(since.timetuple())
+  # Ideally, we could fetch just the activity afterthe `since_unix_time`
   activity = requests.get(f'https://explorer.helium.foundation/api/hotspots/{hotspot_address}/activity')
   data = activity.json().get('data')
   if not len(data):
@@ -56,6 +61,9 @@ def get_activity(home, hotspot_map):
     id_spacing = ''
 
     if reward_type is not None and reward_type.startswith('poc'):
+      if a['reward_block_time'] < since_unix_time:
+        continue
+
       block_id = a['reward_block_height']
       reward_amount = a['reward_amount'] / 100000000
       reward_time = format_time(a['reward_block_time'])
@@ -67,14 +75,23 @@ def get_activity(home, hotspot_map):
       elif reward_type == 'poc_witnesses':
         print(f"{reward_time}: Block {block_id} - {id_spacing:9} Mined {reward_amount} - Witness")
     elif witness_id is not None:
+      if a['poc_rx_txn_block_time'] < since_unix_time:
+        continue
+
       witness_time = format_time(a['poc_rx_txn_block_time'])
       block_id = a['poc_rx_txn_block_height']
       print(f"{witness_time}: Block {block_id} - {witness_id:7} - Challenge Witnessed")
     elif challenge_req_hash is not None:
+      if a['poc_req_txn_block_time'] < since_unix_time:
+        continue
+
       challenge_time = format_time(a['poc_req_txn_block_time'])
       block_id = a['poc_req_txn_block_height']
       print(f"{challenge_time}: Block {block_id} - {id_spacing:9} Challenge Constructed")
     elif challenge_hash is not None:
+      if a['poc_rx_txn_block_time'] < since_unix_time:
+        continue
+
       challenge_time = format_time(a['poc_rx_txn_block_time'])
       block_id = a['poc_rx_txn_block_height']
       challenge_id = a['poc_rx_challenge_id']
@@ -115,21 +132,46 @@ def get_hotspot_address(hotspot_name):
   return (home, hmap)
 
 
-# TODO: redo this a bit to take some params
-def main():
-  hotspot_raw_name = ' '.join(sys.argv[1:])
-  if len(sys.argv) > 1:
-    (home, hotspot_address_map) = get_hotspot_address(' '.join(sys.argv[1:]))
-  else:
-    print("give your hotspot id (one-two-three) as the argument. spaces or dashes are fine.")
-    sys.exit(-1)
+def main(hotspot, since):
+  print(f"Printing activity since: {since}.")
+  hotspot_raw_name = ' '.join(hotspot)
+  (home, hotspot_address_map) = get_hotspot_address(hotspot_raw_name)
 
   if not home:
     print(f"eep, we didn't find your hotspot name ({hotspot_raw_name}).")
-    sys.exit(-1)
+    return -1
+  else:
+    get_activity(home, hotspot_address_map, since)
+  return 0
 
-  get_activity(home, hotspot_address_map)
+
+def valid_datetime_type(arg_datetime_str):
+    """custom argparse type for datetime values using dateutils.parser"""
+    try:
+        dt = parser.parse(arg_datetime_str)
+        if dt > datetime.now():
+          msg = "Parsed datetime ({0}) is later than now.".format(dt)
+          raise argparse.ArgumentTypeError(msg)
+        else:
+          return dt
+    except ValueError:
+        msg = "Given string ({0}) not parsable.".format(arg_datetime_str)
+        raise argparse.ArgumentTypeError(msg)
 
 
 if __name__ == '__main__':
-  main()
+  argparser = argparse.ArgumentParser()
+  argparser.add_argument("--since", help="show activity after date/timestamp.",
+                         required=False,
+                         default=None,
+                         type=valid_datetime_type
+                         )
+  argparser.add_argument("hotspot",
+                         help=("hotspot id (one-two-three) as the argument. "
+                               "spaces or dashes are fine."
+                               ),
+                         nargs='+'
+                         )
+
+  args = argparser.parse_args()
+  sys.exit(main(args.hotspot, args.since))

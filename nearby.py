@@ -3,8 +3,8 @@
 # copyright 2019, MIT License.
 
 # this script needs python3.6 or newer because of the "f-string" syntax,
-# aka PEP 498's literal string interpolation. you'll also need geopy and requests:
-# pip3 install geopy requests
+# aka PEP 498's literal string interpolation. You'll also need to install
+# several required modules: pip3 install -r requirements.txt
 import datetime
 import re
 import sys
