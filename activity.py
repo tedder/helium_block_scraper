@@ -161,7 +161,10 @@ def valid_datetime_type(arg_datetime_str):
 
 if __name__ == '__main__':
   argparser = argparse.ArgumentParser()
-  argparser.add_argument("--since", help="show activity after date/timestamp.",
+  argparser.add_argument("--since",
+                         help=("Show only activity after date/timestamp. "
+                               "'Jan 20th 11:45', '1/22/20', '2p', '15th 3pm'"
+                               ),
                          required=False,
                          default='1/1/1970',
                          type=valid_datetime_type
