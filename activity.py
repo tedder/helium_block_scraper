@@ -163,7 +163,7 @@ if __name__ == '__main__':
   argparser = argparse.ArgumentParser()
   argparser.add_argument("--since", help="show activity after date/timestamp.",
                          required=False,
-                         default=None,
+                         default='1/1/1970',
                          type=valid_datetime_type
                          )
   argparser.add_argument("hotspot",
