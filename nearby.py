@@ -49,7 +49,7 @@ def main():
   hotspots = []
 
   # now compare them to see if they're local
-  print(f"{'dist':5}{'score':>5}{'hotspot name':35}")
+  print(f"{'dist':5} {'score':>6} {'hotspot name':35}")
   for h_id, h in hotspot.items():
     dist = geo(loc(home), loc(h)).miles
     if dist < 30:
@@ -60,7 +60,7 @@ def main():
       hotspots.append(result)
 
   for result in reversed(sorted(hotspots, key=lambda x: x[0])):
-    print(f"{result[0]:4.1f}{result[1]:5}{result[2]:35}{result[3]}")
+    print(f"{result[0]:4.1f} {result[1]:5} {result[2]:35} {result[3]}")
 
   # now pull peeps who have witnessed us: https://tedder.me/lols/witness-me-2.gif
   witret = requests.get(f'https://explorer.helium.foundation/api/witnesses/{home["address"]}')
